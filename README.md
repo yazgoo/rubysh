@@ -19,7 +19,7 @@
 ## And you can mix both
 
     $ ps(ax).select { |x| x.match(".*dhclient.*") }
-    28067 ?        S      0:00 /sbin/dhclient -d -sf /usr/lib/NetworkManager/nm-dhcp-client.action 
+    28067 ?        S      0:00 /sbin/dhclient -d -sf ...
 
     $ ps(ax).select { |x| x.match(".*dhclient.*") }.collect { |x| x.split.first }
     28067
