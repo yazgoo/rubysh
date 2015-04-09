@@ -3,6 +3,7 @@
 # tmux: :set-option -g default-shell /home/yazgoo/dev/rsh/rsh.rb
 require 'yaml'
 require "readline"
+require "awesome_print"
 class Array
     def -@
         self[0] = "-" + self[0].to_s
@@ -145,7 +146,7 @@ class REPL
         if direct_commands.include? args[0].to_s
             empty { system(cmd) }
         else
-            r = IO.popen(cmd)
+            r = @io = IO.popen(cmd)
         end
         @result = $?
         r
@@ -191,15 +192,16 @@ class REPL
     def eval_line line
         result = eval line
         if result.respond_to? :each
-            result.each { |l| puts l }
+            result.each { |l| awesome_print l.chomp }
         else
-            puts "=> #{result}"
+            awesome_print result
         end
     end
     def prompt
-        arrow = "rubysh "
-        pr = (@result.nil? or @result.success?) ? arrow.green : arrow.red
-        (pr + " " + Dir.getwd.gsub(ENV['HOME'], "~").cyan + " ").bold
+#        arrow = "rubysh "
+#        pr = (@result.nil? or @result.success?) ? arrow.green : arrow.red
+#        pr + " " + Dir.getwd.gsub(ENV['HOME'], "~").cyan + " "
+        "$ "
     end
     def setup_readline
         Readline.completion_proc = Proc.new do |str|
@@ -228,6 +230,16 @@ class REPL
             puts exception.backtrace
         end
     end
+    def end_reading_io
+        if not @io.nil?
+            read = nil
+            loop do
+                read = @io.read
+                awesome_print read
+                break if @io.eof
+            end
+        end
+    end
     def initialize
         @functions = Functions.new
         @al = Aliases.new
@@ -236,6 +248,7 @@ class REPL
         line = ""
         while not line.nil?
             begin
+                end_reading_io
                 while line = Readline.readline(prompt, true)
                     evaluate line
                 end
